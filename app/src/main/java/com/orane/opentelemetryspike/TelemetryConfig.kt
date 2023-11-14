@@ -5,6 +5,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
+import io.opentelemetry.sdk.trace.samplers.Sampler
 
 object TelemetryConfig {
 
@@ -17,10 +18,11 @@ object TelemetryConfig {
         // Create a tracer provider with the exporter
         val tracerProvider = SdkTracerProvider.builder()
             .addSpanProcessor(SimpleSpanProcessor.create(exporter))
+            .setSampler(Sampler.alwaysOn())
             .build()
 
         // Set the tracer provider for your OpenTelemetry instance
-        val openTelemetry = OpenTelemetrySdk.builder()
+        OpenTelemetrySdk.builder()
             .setTracerProvider(tracerProvider)
             .buildAndRegisterGlobal()
     }
