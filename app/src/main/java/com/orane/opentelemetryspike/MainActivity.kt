@@ -26,7 +26,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import io.opentelemetry.api.GlobalOpenTelemetry
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.StatusCode
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,7 +37,6 @@ class MainActivity : ComponentActivity() {
 //        TelemetryInstrumentation.startTelemetry()
         setContent {
             OpentelemetrySpikeTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -62,7 +64,9 @@ fun LoginScreen() {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    val tracer: Tracer = GlobalOpenTelemetry.getTracer("login-tracer")
+    val tracer: Tracer = GlobalOpenTelemetry
+        .getTracer("login-tracer")
+
 
     Column(
         modifier = Modifier
@@ -95,13 +99,14 @@ fun LoginScreen() {
 
         Button(
             onClick = {
-                // Handle login button click
-                // Create a span for the login operation
                 val span: Span = tracer.spanBuilder("performLogin").startSpan()
+                span.setStatus(StatusCode.UNSET)
+
                 try {
-                    // Your login logic here
                     span.setAttribute("username", username)
-                    // Additional attributes or events can be added
+                    span.setAttribute("Password", password)
+                    span.setStatus(StatusCode.OK)
+                    span.updateName("Login attempt successful")
                 } catch (e: Exception) {
                     span.recordException(e)
                 } finally {
@@ -113,6 +118,38 @@ fun LoginScreen() {
                 .padding(8.dp)
         ) {
             Text("Login")
+        }
+        Button(
+            onClick = {
+                val span: Span = tracer.spanBuilder("performLogin").startSpan()
+                span.setStatus(StatusCode.UNSET)
+
+                try {
+                    span.setAttribute("username", username)
+                    span.setAttribute("Password", password)
+                    span.setStatus(StatusCode.ERROR)
+                    span.updateName("Login attempt Fail")
+                    span.addEvent(
+                        "login Event",
+                        Attributes.of(
+                            AttributeKey.stringKey("username"),
+                            username,
+                            AttributeKey.stringKey("Password"),
+                            password
+                        )
+                    )
+                    span.recordException(Exception("Login Fail"))
+                } catch (e: Exception) {
+                    span.recordException(e)
+                } finally {
+                    span.end()
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Text("Login Fail")
         }
     }
 }
