@@ -67,9 +67,10 @@ dependencies {
 //    implementation ("io.reactivex.rxjava2:rxandroid:2.1.1")
 //    implementation ("com.akaita.java:rxjava2-debug:1.4.0")
 
-    implementation ("io.opentelemetry:opentelemetry-api:1.7.0")
-    implementation ("io.opentelemetry:opentelemetry-sdk:1.7.0")
-    implementation ("io.opentelemetry:opentelemetry-exporter-otlp:1.7.0")  // Choose an exporter
+    implementation ("io.opentelemetry:opentelemetry-api:1.29.0")
+    implementation ("io.opentelemetry:opentelemetry-sdk:1.29.0")
+    implementation ("io.opentelemetry:opentelemetry-exporter-otlp:1.29.0")  // Choose an exporter
+    implementation ("io.opentelemetry:opentelemetry-exporter-zipkin:1.29.0")
 //    implementation ("io.opentelemetry:opentelemetry-exporter-otlp-grpc:1.0.0")
 //    implementation ("io.opentelemetry:opentelemetry-semconv:1.24.0-alpha")
 //    implementation("io.opentelemetry.android:instrumentation:0.1.0-alpha")
