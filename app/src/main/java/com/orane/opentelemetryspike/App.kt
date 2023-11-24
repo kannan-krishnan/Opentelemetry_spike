@@ -5,6 +5,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter
 import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.metrics.SdkMeterProvider
 import io.opentelemetry.sdk.resources.Resource
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
@@ -25,6 +26,8 @@ class App:Application() {
             .setSampler(Sampler.alwaysOn())
             .build()
 
+        val meterProvider = SdkMeterProvider.builder().build()
+
         val sdkTracerProvider = SdkTracerProvider.builder()
             .addSpanProcessor(BatchSpanProcessor.builder(zipkinExporter).build())
             .setResource(Resource.create(Attributes.of(AttributeKey.stringKey("service.name"), "sample open telemetry app")))
@@ -33,6 +36,7 @@ class App:Application() {
 
         OpenTelemetrySdk.builder()
             .setTracerProvider(sdkTracerProvider)
+            .setMeterProvider(meterProvider)
             .buildAndRegisterGlobal()
 
     }

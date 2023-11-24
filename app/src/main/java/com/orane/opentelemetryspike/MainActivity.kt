@@ -3,17 +3,6 @@ package com.orane.opentelemetryspike
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.orane.opentelemetryspike.ui.theme.OpentelemetrySpikeTheme
-import io.opentelemetry.api.trace.Tracer
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -22,14 +11,18 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.orane.opentelemetryspike.ui.theme.OpentelemetrySpikeTheme
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.Tracer
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,6 +60,12 @@ fun LoginScreen() {
     val tracer: Tracer = GlobalOpenTelemetry
         .getTracer("login-tracer")
 
+    tracer.spanBuilder("login Screen open").startSpan().use {
+            firstSpan ->
+        firstSpan.setAttribute("isRecording", firstSpan.isRecording)
+       println("firstSpan:isRecording: ${firstSpan.isRecording}")
+
+    }
 
     Column(
         modifier = Modifier
@@ -100,6 +99,7 @@ fun LoginScreen() {
         Button(
             onClick = {
                 val span: Span = tracer.spanBuilder("performLogin").startSpan()
+                span.makeCurrent()
                 span.setStatus(StatusCode.UNSET)
 
                 try {
@@ -123,6 +123,7 @@ fun LoginScreen() {
             onClick = {
                 val span: Span = tracer.spanBuilder("performLogin").startSpan()
                 span.setStatus(StatusCode.UNSET)
+                Thread.sleep(1000)
 
                 try {
                     span.setAttribute("username", username)
@@ -138,10 +139,12 @@ fun LoginScreen() {
                             password
                         )
                     )
+                    Thread.sleep(1000)
                     span.recordException(Exception("Login Fail"))
                 } catch (e: Exception) {
                     span.recordException(e)
                 } finally {
+                    Thread.sleep(1000)
                     span.end()
                 }
             },
@@ -151,5 +154,16 @@ fun LoginScreen() {
         ) {
             Text("Login Fail")
         }
+    }
+
+}
+
+
+// Extension function to mimic the use function for ScopedSpan
+inline fun <R> Span.use(block: (Span) -> R): R {
+    try {
+        return block(this)
+    } finally {
+        this.end()
     }
 }
